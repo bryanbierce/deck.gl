@@ -48,4 +48,8 @@ if (typeof document !== 'undefined') {
   global.navigator = dom.window.navigator;
   global.document = dom.window.document;
   global.Element = dom.window.Element;
+
+  global.Image = dom.window.Image;
+  global.HTMLCanvasElement = dom.window.HTMLCanvasElement;
+  global.HTMLVideoElement = dom.window.HTMLVideoElement;
 }

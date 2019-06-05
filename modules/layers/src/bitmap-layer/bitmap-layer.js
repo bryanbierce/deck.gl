@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-/* global Image, HTMLCanvasElement */
+/* global Image, HTMLCanvasElement, HTMLVideoElement */
 import GL from '@luma.gl/constants';
 import {Layer} from '@deck.gl/core';
 import {Model, Geometry, Texture2D, fp64} from '@luma.gl/core';
@@ -29,10 +29,9 @@ const {fp64LowPart} = fp64;
 import vs from './bitmap-layer-vertex';
 import fs from './bitmap-layer-fragment';
 
-const DEFAULT_TEXTURE_PARAMETERS = {
-  [GL.TEXTURE_MIN_FILTER]: GL.LINEAR_MIPMAP_LINEAR,
-  // GL.LINEAR is the default value but explicitly set it here
-  [GL.TEXTURE_MAG_FILTER]: GL.LINEAR,
+export const DEFAULT_TEXTURE_PARAMETERS = {
+  [GL.TEXTURE_MIN_FILTER]: GL.NEAREST,
+  [GL.TEXTURE_MAG_FILTER]: GL.NEAREST,
   [GL.TEXTURE_WRAP_S]: GL.CLAMP_TO_EDGE,
   [GL.TEXTURE_WRAP_T]: GL.CLAMP_TO_EDGE
 };
@@ -180,9 +179,20 @@ export default class BitmapLayer extends Layer {
     );
   }
 
-  draw({uniforms}) {
+  draw(opts) {
+    const {uniforms} = opts;
     const {bitmapTexture, model} = this.state;
-    const {desaturate, transparentColor, tintColor} = this.props;
+    const {image, desaturate, transparentColor, tintColor} = this.props;
+
+    // Update video frame
+    if (
+      bitmapTexture &&
+      image instanceof HTMLVideoElement &&
+      image.readyState > HTMLVideoElement.HAVE_METADATA
+    ) {
+      bitmapTexture.resize({width: image.videoWidth, height: image.videoHeight});
+      bitmapTexture.setSubImageData({data: image});
+    }
 
     // // TODO fix zFighting
     // Render the image
@@ -226,6 +236,16 @@ export default class BitmapLayer extends Layer {
         bitmapTexture: new Texture2D(gl, {
           data: image,
           parameters: DEFAULT_TEXTURE_PARAMETERS
+        })
+      });
+    } else if (image instanceof HTMLVideoElement) {
+      // Initialize an empty texture while we wait for the video to load
+      this.setState({
+        bitmapTexture: new Texture2D(gl, {
+          width: 1,
+          height: 1,
+          parameters: DEFAULT_TEXTURE_PARAMETERS,
+          mipmaps: false
         })
       });
     }
