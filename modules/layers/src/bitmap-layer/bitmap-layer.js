@@ -29,9 +29,9 @@ const {fp64LowPart} = fp64;
 import vs from './bitmap-layer-vertex';
 import fs from './bitmap-layer-fragment';
 
-export const DEFAULT_TEXTURE_PARAMETERS = {
-  [GL.TEXTURE_MIN_FILTER]: GL.NEAREST,
-  [GL.TEXTURE_MAG_FILTER]: GL.NEAREST,
+const DEFAULT_TEXTURE_PARAMETERS = {
+  [GL.TEXTURE_MIN_FILTER]: GL.LINEAR_MIPMAP_LINEAR,
+  [GL.TEXTURE_MAG_FILTER]: GL.LINEAR,
   [GL.TEXTURE_WRAP_S]: GL.CLAMP_TO_EDGE,
   [GL.TEXTURE_WRAP_T]: GL.CLAMP_TO_EDGE
 };
@@ -191,6 +191,7 @@ export default class BitmapLayer extends Layer {
       image.readyState > HTMLVideoElement.HAVE_METADATA
     ) {
       bitmapTexture.resize({width: image.videoWidth, height: image.videoHeight});
+      bitmapTexture.setParameters(DEFAULT_TEXTURE_PARAMETERS);
       bitmapTexture.setSubImageData({data: image});
     }
 
