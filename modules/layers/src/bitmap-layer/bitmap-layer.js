@@ -30,6 +30,13 @@ import vs from './bitmap-layer-vertex';
 import fs from './bitmap-layer-fragment';
 
 const DEFAULT_TEXTURE_PARAMETERS = {
+  [GL.TEXTURE_MIN_FILTER]: GL.LINEAR,
+  [GL.TEXTURE_MAG_FILTER]: GL.LINEAR,
+  [GL.TEXTURE_WRAP_S]: GL.CLAMP_TO_EDGE,
+  [GL.TEXTURE_WRAP_T]: GL.CLAMP_TO_EDGE
+};
+
+const DEFAULT_MIPMAP_TEXTURE_PARAMETERS = {
   [GL.TEXTURE_MIN_FILTER]: GL.LINEAR_MIPMAP_LINEAR,
   [GL.TEXTURE_MAG_FILTER]: GL.LINEAR,
   [GL.TEXTURE_WRAP_S]: GL.CLAMP_TO_EDGE,
@@ -190,8 +197,14 @@ export default class BitmapLayer extends Layer {
       image instanceof HTMLVideoElement &&
       image.readyState > HTMLVideoElement.HAVE_METADATA
     ) {
-      bitmapTexture.resize({width: image.videoWidth, height: image.videoHeight});
-      bitmapTexture.setParameters(DEFAULT_TEXTURE_PARAMETERS);
+      const sizeChanged =
+        bitmapTexture.width !== image.videoWidth || bitmapTexture.height !== image.videoHeight;
+      if (sizeChanged) {
+        // `mipmaps` is force to `false` when calling resize
+        bitmapTexture.resize({width: image.videoWidth, height: image.videoHeight});
+        bitmapTexture.setParameters(DEFAULT_TEXTURE_PARAMETERS);
+      }
+
       bitmapTexture.setSubImageData({data: image});
     }
 
@@ -236,7 +249,7 @@ export default class BitmapLayer extends Layer {
       this.setState({
         bitmapTexture: new Texture2D(gl, {
           data: image,
-          parameters: DEFAULT_TEXTURE_PARAMETERS
+          parameters: DEFAULT_MIPMAP_TEXTURE_PARAMETERS
         })
       });
     } else if (image instanceof HTMLVideoElement) {
